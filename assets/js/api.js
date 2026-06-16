@@ -2,7 +2,7 @@
 console.log("api.js started evaluating");
 
 const supabaseUrl = 'https://bllkimqqkdqnmaktncvj.supabase.co';
-const supabaseKey = 'sb_publishable_E-sMLyQSoVTkf9lYLRDPGg_qMH_PhW5';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsbGtpbXFxa2Rxbm1ha3RuY3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDg0MTcsImV4cCI6MjA5NzE4NDQxN30.T8sBnVe39HDMEzmFfvWkO8XceM-MEvPWRjAhw1Dw-aM';
 
 const Api = {
     // Keys
@@ -56,7 +56,7 @@ const Api = {
 
             for (const table of tables) {
                 const { data, error } = await this.supabase.from(table.name).select('*');
-                if (!error && data) {
+                if (!error && data && data.length > 0) {
                     const mappedData = data.map(item => {
                         if (item.created_at) {
                             item.createdAt = item.created_at;
@@ -65,6 +65,17 @@ const Api = {
                         return item;
                     });
                     localStorage.setItem(table.key, JSON.stringify(mappedData));
+                }
+            }
+
+            // Push local seed data to Supabase if tables are empty
+            const localUsers = this._get(this.keys.users);
+            if (localUsers.length > 0) {
+                const { data: remoteUsers } = await this.supabase.from('users').select('id');
+                if (!remoteUsers || remoteUsers.length === 0) {
+                    for (const u of localUsers) {
+                        await this._pushToSupabase('users', u);
+                    }
                 }
             }
 
