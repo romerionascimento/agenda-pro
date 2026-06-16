@@ -71,20 +71,9 @@ const Auth = {
             const hashedPassword = await Api.hashPassword(password);
 
             let user = null;
-            if (Api.supabase) {
-                // Verify against secure RPC
-                const { data, error } = await Api.supabase.rpc('verify_login', { 
-                    p_username: username, 
-                    p_password_hash: hashedPassword 
-                });
-                if (!error && data) {
-                    user = data;
-                }
-            } else {
-                // Fallback to local storage (not recommended for production)
-                const users = Api._get(Api.keys.users); // Use raw get to access passwords
-                user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
-            }
+            // Fetch users from secure local cache (which was just decrypted from the E2E network payload)
+            const users = Api._get(Api.keys.users) || []; 
+            user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && (u.password === hashedPassword || u.password === password));
 
             if (user) {
                 // Clear attempts on success

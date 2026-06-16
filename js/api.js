@@ -155,7 +155,8 @@ const Api = {
             try {
                 // Decode base64 then decrypt
                 const decoded = atob(data.substring(5));
-                data = this._cipher(decoded, 'AgendaProSecretKey@2026!');
+                const decryptedBytes = this._cipher(decoded, 'AgendaProSecretKey@2026!');
+                data = decodeURIComponent(escape(decryptedBytes));
             } catch (e) {
                 console.error("Local storage decryption failed for key", key, e);
                 return key === this.keys.config ? {} : [];
@@ -170,11 +171,16 @@ const Api = {
 
     // Set helper
     _set(key, val) {
-        const jsonStr = JSON.stringify(val);
-        // Encrypt then encode base64
-        const encrypted = this._cipher(jsonStr, 'AgendaProSecretKey@2026!');
-        const encoded = btoa(encrypted);
-        localStorage.setItem(key, 'ENC::' + encoded);
+        try {
+            const jsonStr = JSON.stringify(val);
+            // Handle unicode safely before encrypting
+            const utf8Str = unescape(encodeURIComponent(jsonStr));
+            const encrypted = this._cipher(utf8Str, 'AgendaProSecretKey@2026!');
+            const encoded = btoa(encrypted);
+            localStorage.setItem(key, 'ENC::' + encoded);
+        } catch(e) {
+            console.error("Error setting local storage key", key, e);
+        }
     },
 
     async _pushToSupabase(table, data) {
@@ -185,7 +191,8 @@ const Api = {
                 created_at: data.createdAt || new Date().toISOString() 
             };
             const jsonStr = JSON.stringify(data);
-            const encrypted = this._cipher(jsonStr, 'AgendaProSecretKey@2026!');
+            const utf8Str = unescape(encodeURIComponent(jsonStr));
+            const encrypted = this._cipher(utf8Str, 'AgendaProSecretKey@2026!');
             payload.data = 'E2E::' + btoa(encrypted);
             await this.supabase.from(table).upsert(payload);
         } catch(e) { console.error("Error pushing to Supabase", e); }
@@ -558,46 +565,19 @@ const Api = {
         return true;
     },
 
-    // Seed Data if storage is empty
-    seedData() {
-        // Migration to add new permissions
-        const existingUsers = this.getUsers();
-        let updated = false;
-        existingUsers.forEach(u => {
-            if (u.role === 'Administrador') {
-                if (u.permissions && !u.permissions.includes('ver_logs')) { u.permissions.push('ver_logs'); updated = true; }
-                if (u.permissions && !u.permissions.includes('gerenciar_configuracoes')) { u.permissions.push('gerenciar_configuracoes'); updated = true; }
-                if (u.permissions && !u.permissions.includes('editar_protocolo')) { u.permissions.push('editar_protocolo'); updated = true; }
-            }
-            if (u.role === 'Supervisor') {
-                if (u.permissions && !u.permissions.includes('ver_logs')) { u.permissions.push('ver_logs'); updated = true; }
-                if (u.permissions && !u.permissions.includes('editar_protocolo')) { u.permissions.push('editar_protocolo'); updated = true; }
-            }
-        });
-        if (updated) {
-            this._set(this.keys.users, existingUsers);
-        }
+        this._deleteFromSupabase('users', userId);
+        return true;
+    }
+};
 
-        // Seed Users first (since it is required for login)
-        if (existingUsers.length === 0) {
-            const mockUsers = [
-                {
-                    id: 'usr_1',
-                    username: 'admin',
-                    password: 'admin123',
-                    name: 'Carlos Administrador',
-                    role: 'Administrador',
-                    permissions: ['ver_dashboard', 'ver_agenda', 'editar_agenda', 'gerenciar_clientes', 'gerenciar_tecnicos_equipes', 'ver_relatorios', 'gerenciar_usuarios', 'ver_logs', 'gerenciar_configuracoes', 'editar_protocolo']
-                },
-                {
-                    id: 'usr_2',
-                    username: 'supervisor',
-                    password: 'super123',
-                    name: 'Ana Supervisora',
-                    role: 'Supervisor',
-                    permissions: ['ver_dashboard', 'ver_agenda', 'editar_agenda', 'gerenciar_clientes', 'gerenciar_tecnicos_equipes', 'ver_relatorios', 'ver_logs', 'editar_protocolo']
-                },
-                {
+window.Api = Api;
+
+try {
+    Api.init();
+} catch (e) {
+    console.error("Error running Api.init:", e);
+    setTimeout(() => alert("Erro ao inicializar API: " + e.message), 500);
+}
                     id: 'usr_3',
                     username: 'comercial',
                     password: 'com123',
@@ -931,9 +911,8 @@ const Api = {
 window.Api = Api;
 
 try {
-    Api.seedData();
     Api.init();
 } catch (e) {
-    console.error("Error running Api.seedData/init:", e);
+    console.error("Error running Api.init:", e);
     setTimeout(() => alert("Erro ao carregar banco de dados local: " + e.message), 500);
 }
