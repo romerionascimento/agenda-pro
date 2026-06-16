@@ -1,9 +1,20 @@
--- Habilitar a extensão UUID (geração de IDs)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- ============================================
+-- AGENDA-PRO: Script Supabase (PostgreSQL)
+-- IMPORTANTE: Execute no SQL Editor do Supabase
+-- ============================================
 
--- 1. Tabela Clientes
+-- 0. Limpar tabelas antigas (caso existam com UUID)
+DROP TABLE IF EXISTS logs CASCADE;
+DROP TABLE IF EXISTS config CASCADE;
+DROP TABLE IF EXISTS appointments CASCADE;
+DROP TABLE IF EXISTS teams CASCADE;
+DROP TABLE IF EXISTS technicians CASCADE;
+DROP TABLE IF EXISTS clients CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- 1. Tabela Clientes (ID tipo TEXT para compatibilidade com o JS)
 CREATE TABLE clients (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     phone TEXT,
     email TEXT,
@@ -13,7 +24,7 @@ CREATE TABLE clients (
 
 -- 2. Tabela Técnicos
 CREATE TABLE technicians (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     specialty TEXT,
     shift TEXT,
@@ -22,23 +33,23 @@ CREATE TABLE technicians (
 
 -- 3. Tabela Equipes
 CREATE TABLE teams (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     techs JSONB DEFAULT '[]'::jsonb
 );
 
 -- 4. Tabela Agendamentos
 CREATE TABLE appointments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "clientName" TEXT NOT NULL,
+    id TEXT PRIMARY KEY,
+    "clientName" TEXT,
     title TEXT NOT NULL,
     description TEXT,
-    date DATE NOT NULL,
-    "startTime" TIME NOT NULL,
-    "endTime" TIME NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pendente',
-    "techId" UUID REFERENCES technicians(id) ON DELETE SET NULL,
-    "teamId" UUID REFERENCES teams(id) ON DELETE SET NULL,
+    date DATE,
+    "startTime" TEXT,
+    "endTime" TEXT,
+    status TEXT DEFAULT 'agendado',
+    "techId" TEXT,
+    "teamId" TEXT,
     protocolo TEXT UNIQUE,
     "createdBy" TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -46,7 +57,7 @@ CREATE TABLE appointments (
 
 -- 5. Tabela Usuários
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
@@ -58,31 +69,50 @@ CREATE TABLE users (
 
 -- 6. Tabela Logs
 CREATE TABLE logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user" TEXT NOT NULL,
-    username TEXT NOT NULL,
-    action TEXT NOT NULL,
-    description TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    "timestamp" TEXT,
+    "user" TEXT,
+    username TEXT,
+    action TEXT,
+    description TEXT
 );
 
--- 7. Tabela Configurações (Apenas 1 registro deve existir)
+-- 7. Tabela Configurações
 CREATE TABLE config (
-    id INTEGER PRIMARY KEY DEFAULT 1,
+    id SERIAL PRIMARY KEY,
     "quotaEnabled" BOOLEAN DEFAULT false,
     "quotaType" TEXT DEFAULT 'semanal',
     "quotaLimit" INTEGER DEFAULT 20,
     "predefinedTitles" JSONB DEFAULT '[]'::jsonb
 );
 
--- Inserir configuração padrão
+-- 8. Desabilitar RLS em todas as tabelas (permite acesso via API pública)
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE technicians ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE config ENABLE ROW LEVEL SECURITY;
+
+-- 9. Criar políticas que permitem acesso total via anon key
+CREATE POLICY "Allow all on clients" ON clients FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on technicians" ON technicians FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on teams" ON teams FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on appointments" ON appointments FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on users" ON users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on logs" ON logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on config" ON config FOR ALL USING (true) WITH CHECK (true);
+
+-- 10. Inserir configuração padrão
 INSERT INTO config ("quotaEnabled", "quotaType", "quotaLimit", "predefinedTitles") 
 VALUES (false, 'semanal', 20, '["[AF] LUDI BRASILEI NASCIMENTO", "[VIS] AGL MAGALHAES", "[REDE] JX AZEDO SOCIEDADE ADVOGADOS", "[PLUS] GUSTAVO MACEDO COSTA", "[RET] HOCA CONSULTORIA TRIBUTARIA"]'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
--- Inserir usuário administrador padrão
-INSERT INTO users (name, username, password, role, status, permissions)
+-- 11. Inserir usuário administrador padrão
+INSERT INTO users (id, name, username, password, role, status, permissions)
 VALUES (
+    'usr_1',
     'Administrador', 
     'admin', 
     'admin123', 

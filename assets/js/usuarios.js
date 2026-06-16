@@ -154,7 +154,7 @@ const UsersPage = {
         this.modal.classList.remove('active');
     },
 
-    saveUser(e) {
+    async saveUser(e) {
         e.preventDefault();
 
         const idInput = document.getElementById('user-id');
@@ -192,7 +192,7 @@ const UsersPage = {
             return;
         }
 
-        Api.saveUser(user);
+        await Api.saveUser(user);
         
         // Clear approving flag
         idInput.dataset.approving = '';

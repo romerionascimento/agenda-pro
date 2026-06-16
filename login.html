@@ -240,7 +240,7 @@
         });
 
         // Login handler
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             errorAlert.style.display = 'none';
             successAlert.style.display = 'none';
@@ -248,7 +248,7 @@
                 const usernameInput = document.getElementById('username').value;
                 const passwordInput = document.getElementById('password').value;
 
-                const result = Auth.login(usernameInput, passwordInput);
+                const result = await Auth.login(usernameInput, passwordInput);
 
                 if (result.success) {
                     window.location.href = 'dashboard.html';
@@ -263,7 +263,7 @@
         });
 
         // Register handler
-        registerForm.addEventListener('submit', function(e) {
+        registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             errorAlert.style.display = 'none';
             successAlert.style.display = 'none';
@@ -298,7 +298,7 @@
             }
 
             try {
-                const result = Api.registerUser(name, username, password);
+                const result = await Api.registerUser(name, username, password);
                 if (result.success) {
                     successAlert.textContent = result.message;
                     successAlert.style.display = 'block';

@@ -90,6 +90,14 @@ const Api = {
         }
     },
 
+    async hashPassword(password) {
+        const msgBuffer = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    },
+
     // Get helper
     _get(key) {
         const data = localStorage.getItem(key);
@@ -368,10 +376,20 @@ const Api = {
 
     // --- Users CRUD ---
     getUsers() {
-        return this._get(this.keys.users);
+        // Return users without password field for safety
+        const users = this._get(this.keys.users);
+        return users.map(u => {
+            const safeUser = { ...u };
+            delete safeUser.password;
+            return safeUser;
+        });
     },
-    saveUser(user) {
-        const users = this.getUsers();
+    async saveUser(user) {
+        const users = this._get(this.keys.users); // Use raw get to access passwords if needed for update
+        if (user.password) {
+            user.password = await this.hashPassword(user.password);
+        }
+        
         if (user.id) {
             const index = users.findIndex(u => u.id === user.id);
             if (index !== -1) {
@@ -391,8 +409,11 @@ const Api = {
             this.addLog('Usuário', `Criou usuário: ${user.name}`);
         }
         this._set(this.keys.users, users);
-        this._pushToSupabase('users', user);
-        return user;
+        
+        // Push the merged user (which has the correct password) to Supabase
+        const userToPush = user.id ? users.find(u => u.id === user.id) : user;
+        await this._pushToSupabase('users', userToPush);
+        return userToPush;
     },
     deleteUser(id) {
         const users = this.getUsers();
@@ -405,26 +426,31 @@ const Api = {
     },
 
     // --- Self-Registration (Primeiro Acesso) ---
-    registerUser(name, username, password) {
+    async registerUser(name, username, password) {
         const users = this.getUsers();
         // Check if username already exists
         const exists = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase());
         if (exists) {
             return { success: false, message: 'Este nome de usuário já está em uso. Escolha outro.' };
         }
+        
+        const hashedPassword = await this.hashPassword(password);
+        
         const newUser = {
             id: 'usr_' + Math.random().toString(36).substring(2, 9),
             name: name,
             username: username,
-            password: password,
+            password: hashedPassword,
             role: 'Pendente',
             status: 'pendente',
             permissions: [],
             createdAt: new Date().toISOString()
         };
-        users.push(newUser);
-        this._set(this.keys.users, users);
-        this._pushToSupabase('users', newUser);
+        
+        const rawUsers = this._get(this.keys.users);
+        rawUsers.push(newUser);
+        this._set(this.keys.users, rawUsers);
+        await this._pushToSupabase('users', newUser);
         this.addLog('Cadastro', `Novo cadastro pendente de aprovação: ${name} (${username})`);
         return { success: true, message: 'Cadastro enviado com sucesso! Aguarde a aprovação do administrador.' };
     },

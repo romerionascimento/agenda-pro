@@ -27,12 +27,24 @@ const Auth = {
                 window.location.href = 'login.html';
             }
         } else {
+            const user = JSON.parse(session);
+            
+            // Check session expiration (8 hours)
+            if (user.loginTime) {
+                const loginDate = new Date(user.loginTime);
+                const now = new Date();
+                const diffHours = (now - loginDate) / (1000 * 60 * 60);
+                if (diffHours > 8) {
+                    this.logout();
+                    return;
+                }
+            }
+
             if (isLoginPage) {
                 // Logged in and trying to access login page
                 this.redirectToAllowedPage();
             } else {
                 // Logged in: Check permission for this specific page
-                const user = JSON.parse(session);
                 const requiredPermission = this.pagePermissions[pageName];
 
                 if (requiredPermission && (!user.permissions || !user.permissions.includes(requiredPermission))) {
@@ -43,13 +55,42 @@ const Auth = {
         }
     },
 
-    login(username, password) {
+    async login(username, password) {
         try {
-            // Fetch users from API (dynamic local storage database)
-            const users = Api.getUsers();
-            const user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+            // Brute force protection
+            const lockoutKey = 'agenda_pro_lockout_' + username.toLowerCase();
+            const attemptsKey = 'agenda_pro_attempts_' + username.toLowerCase();
+            const lockoutTime = localStorage.getItem(lockoutKey);
+            
+            if (lockoutTime && new Date().getTime() < parseInt(lockoutTime)) {
+                const remaining = Math.ceil((parseInt(lockoutTime) - new Date().getTime()) / 1000);
+                return { success: false, message: `Muitas tentativas falhas. Conta bloqueada por ${remaining} segundos.` };
+            }
+
+            // Hash the password locally
+            const hashedPassword = await Api.hashPassword(password);
+
+            let user = null;
+            if (Api.supabase) {
+                // Verify against secure RPC
+                const { data, error } = await Api.supabase.rpc('verify_login', { 
+                    p_username: username, 
+                    p_password_hash: hashedPassword 
+                });
+                if (!error && data) {
+                    user = data;
+                }
+            } else {
+                // Fallback to local storage (not recommended for production)
+                const users = Api._get(Api.keys.users); // Use raw get to access passwords
+                user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
+            }
 
             if (user) {
+                // Clear attempts on success
+                localStorage.removeItem(attemptsKey);
+                localStorage.removeItem(lockoutKey);
+
                 // Block pending users
                 if (user.status === 'pendente') {
                     return { success: false, message: 'Seu cadastro está aguardando aprovação do administrador. Tente novamente mais tarde.' };
@@ -65,7 +106,17 @@ const Auth = {
                 localStorage.setItem(this.sessionKey, JSON.stringify(userData));
                 return { success: true };
             }
-            return { success: false, message: 'Usuário ou senha inválidos!' };
+            
+            // Increment failed attempts
+            let attempts = parseInt(localStorage.getItem(attemptsKey) || '0') + 1;
+            localStorage.setItem(attemptsKey, attempts);
+            if (attempts >= 5) {
+                // Lockout for 2 minutes
+                localStorage.setItem(lockoutKey, new Date().getTime() + 120000);
+                return { success: false, message: 'Muitas tentativas falhas. Conta bloqueada por 2 minutos.' };
+            }
+            
+            return { success: false, message: `Usuário ou senha inválidos! (Tentativa ${attempts}/5)` };
         } catch (err) {
             return { success: false, message: 'Erro interno: ' + err.message };
         }

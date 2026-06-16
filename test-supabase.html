@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+        
+        const supabaseUrl = 'https://bllkimqqkdqnmaktncvj.supabase.co';
+        const supabaseKey = 'sb_publishable_E-sMLyQSoVTkf9lYLRDPGg_qMH_PhW5';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function test() {
+            console.log("Checking users...");
+            const { data, error } = await supabase.from('users').select('*');
+            console.log("Select Users:", { data, error });
+
+            if (data && data.length === 0) {
+                console.log("Attempting to insert admin user...");
+                const { data: insertData, error: insertError } = await supabase.from('users').insert([{
+                    name: 'Administrador',
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'Administrador',
+                    status: 'aprovado',
+                    permissions: ["ver_dashboard", "ver_agenda", "editar_agenda", "gerenciar_clientes", "gerenciar_tecnicos_equipes", "ver_relatorios", "gerenciar_usuarios", "ver_logs", "gerenciar_configuracoes", "editar_protocolo"]
+                }]);
+                console.log("Insert Result:", { insertData, insertError });
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>
