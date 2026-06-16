@@ -16,18 +16,18 @@ const Auth = {
     },
 
     checkAuth() {
-        const session = localStorage.getItem(this.sessionKey);
         const currentPath = window.location.pathname;
         const pageName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
         const isLoginPage = pageName === 'login.html' || pageName === '';
+        const session = Api._get(this.sessionKey);
 
-        if (!session) {
+        if (!session || (Array.isArray(session) && session.length === 0) || Object.keys(session).length === 0) {
             if (!isLoginPage) {
                 // Not logged in and trying to access a secure page
                 window.location.href = 'login.html';
             }
         } else {
-            const user = JSON.parse(session);
+            const user = session;
             
             // Check session expiration (8 hours)
             if (user.loginTime) {
@@ -103,7 +103,7 @@ const Auth = {
                     permissions: user.permissions,
                     loginTime: new Date().toISOString()
                 };
-                localStorage.setItem(this.sessionKey, JSON.stringify(userData));
+                Api._set(this.sessionKey, userData);
                 return { success: true };
             }
             
@@ -128,8 +128,8 @@ const Auth = {
     },
 
     getCurrentUser() {
-        const session = localStorage.getItem(this.sessionKey);
-        return session ? JSON.parse(session) : null;
+        const session = Api._get(this.sessionKey);
+        return (!session || (Array.isArray(session) && session.length === 0) || Object.keys(session).length === 0) ? null : session;
     },
 
     // Redirect user to the first page they actually have access to

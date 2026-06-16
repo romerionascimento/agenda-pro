@@ -64,7 +64,7 @@ const Api = {
                         }
                         return item;
                     });
-                    localStorage.setItem(table.key, JSON.stringify(mappedData));
+                    this._set(table.key, mappedData);
                 }
             }
 
@@ -81,7 +81,7 @@ const Api = {
 
             const { data: configData, error: configError } = await this.supabase.from('config').select('*').eq('id', 1).single();
             if (!configError && configData) {
-                localStorage.setItem(this.keys.config, JSON.stringify(configData));
+                this._set(this.keys.config, configData);
             }
 
             window.dispatchEvent(new Event('api-data-updated'));
@@ -100,14 +100,38 @@ const Api = {
 
     // Get helper
     _get(key) {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : (key === this.keys.config ? {} : []);
+        let data = localStorage.getItem(key);
+        if (data && data.startsWith('ENC::')) {
+            try {
+                if (typeof CryptoJS !== 'undefined') {
+                    const decrypted = CryptoJS.AES.decrypt(data.substring(5), 'AgendaProSecretKey@2026!');
+                    data = decrypted.toString(CryptoJS.enc.Utf8);
+                    if (!data) throw new Error("Decryption returned empty string");
+                } else {
+                    console.warn("CryptoJS not available, returning default");
+                    return key === this.keys.config ? {} : [];
+                }
+            } catch (e) {
+                console.error("Local storage decryption failed for key", key, e);
+                return key === this.keys.config ? {} : [];
+            }
+        }
+        try {
+            return data ? JSON.parse(data) : (key === this.keys.config ? {} : []);
+        } catch(e) {
+            return key === this.keys.config ? {} : [];
+        }
     },
 
     // Set helper
     _set(key, val) {
         const jsonStr = JSON.stringify(val);
-        localStorage.setItem(key, jsonStr);
+        if (typeof CryptoJS !== 'undefined') {
+            const encrypted = CryptoJS.AES.encrypt(jsonStr, 'AgendaProSecretKey@2026!').toString();
+            localStorage.setItem(key, 'ENC::' + encrypted);
+        } else {
+            localStorage.setItem(key, jsonStr);
+        }
     },
 
     async _pushToSupabase(table, data) {
