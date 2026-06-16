@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/calendar.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <!-- Top Header (Title) -->
+            <header class="main-header" style="display: none;">
+                <!-- Hide general header on Agenda page to save vertical space, like the screenshot -->
+                <h2 class="header-title">Agenda de Serviços</h2>
+            </header>
+
+            <!-- Calendar Container (Acts as body) -->
+            <div class="calendar-container fade-in" style="margin: 0; border: none; height: 100vh;">
+                <!-- Status Legend Bar -->
+                <div class="status-legend-bar">
+                    <div class="legend-items">
+                        <span class="legend-title">Agenda |</span>
+                        <div class="legend-item">
+                            <span class="legend-dot concluido"></span> Concluído
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot execucao"></span> Em execução
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot agendado"></span> Agendado
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot pendencia-cli"></span> Pendência Cliente
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot remarcado-cli"></span> Remarcado Cliente
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot pendencia-com"></span> Pendência Comercial
+                        </div>
+                    </div>
+                    <div class="calendar-action-buttons">
+                        <button class="btn btn-primary" id="btn-add-appt">
+                            <span>+</span> Adicionar
+                        </button>
+                        <div class="filter-dropdown">
+                            <button class="btn-icon" id="btn-filter" title="Filtrar Agendamentos">🔍</button>
+                            <div class="filter-dropdown-content" id="filter-content">
+                                <h4 style="font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted);">QUEM AGENDOU</h4>
+                                <div id="creator-filters">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                                <hr style="border-color: var(--border-color); margin: 8px 0;">
+                                <h4 style="font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted);">TIPO DE SOLICITAÇÃO</h4>
+                                <div id="type-filters">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                                <hr style="border-color: var(--border-color); margin: 8px 0;">
+                                <h4 style="font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted);">TÉCNICOS</h4>
+                                <div id="tech-filters">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                                <hr style="border-color: var(--border-color); margin: 8px 0;">
+                                <h4 style="font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted);">STATUS</h4>
+                                <div id="status-filters">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Navigation Bar -->
+                <div class="calendar-nav-bar">
+                    <div class="view-toggles">
+                        <button class="btn-toggle" id="view-day">Day</button>
+                        <button class="btn-toggle active" id="view-week">Semana</button>
+                        <button class="btn-toggle" id="view-month">Mês</button>
+                    </div>
+
+                    <div class="date-nav-controls">
+                        <button class="date-nav-btn" id="prev-date">◀</button>
+                        <span class="current-date-range" id="current-range-label">junho 07 - 13</span>
+                        <button class="date-nav-btn" id="next-date">▶</button>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-secondary" id="btn-today">Hoje</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid Area -->
+                <div class="calendar-grid-wrapper" id="grid-wrapper">
+                    <!-- Grid rendered dynamically by agenda.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Modal -->
+    <div class="modal" id="appt-modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Novo Agendamento</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="appt-form">
+                <div class="modal-body">
+                    <input type="hidden" id="appt-id">
+                    
+                    <div class="form-group">
+                        <label for="appt-client">Cliente *</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="appt-client" class="form-control" required style="flex: 1;">
+                                <option value="">Selecione o Cliente</option>
+                                <!-- Rendered dynamically -->
+                            </select>
+                            <button type="button" id="btn-quick-client" class="btn btn-secondary" title="Novo Cliente" style="padding: 0 12px; font-weight: bold; font-size: 1.2rem; display: none;">+</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-protocolo">Protocolo ERP</label>
+                        <input type="text" id="appt-protocolo" class="form-control" placeholder="Ex: ERP-20261234">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-title-select">Tipo de solicitação *</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="appt-title-select" class="form-control" required style="flex: 1;">
+                                <!-- Rendered dynamically -->
+                            </select>
+                            <input type="hidden" id="appt-title">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-desc">Descrição</label>
+                        <textarea id="appt-desc" class="form-control" placeholder="Observações do serviço..."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="appt-date">Data *</label>
+                            <input type="date" id="appt-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appt-start">Início *</label>
+                            <input type="time" id="appt-start" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appt-end">Término *</label>
+                            <input type="time" id="appt-end" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appt-status">Status *</label>
+                        <select id="appt-status" class="form-control" required>
+                            <option value="agendado">Agendado</option>
+                            <option value="execucao">Em execução</option>
+                            <option value="concluido">Concluído</option>
+                            <option value="pendencia-cli">Pendência Cliente</option>
+                            <option value="remarcado-cli">Remarcado Cliente</option>
+                            <option value="pendencia-com">Pendência Comercial</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="appt-tech">Técnico Responsável *</label>
+                            <select id="appt-tech" class="form-control" required>
+                                <option value="">Selecione o Técnico</option>
+                                <!-- Rendered dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appt-team">Equipe *</label>
+                            <select id="appt-team" class="form-control" required>
+                                <option value="">Selecione a Equipe</option>
+                                <!-- Rendered dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-delete-appt" style="display: none; background-color: rgba(239, 68, 68, 0.1); color: var(--color-execucao); border-color: rgba(239, 68, 68, 0.3);">Excluir</button>
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-appt">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mini Modal Client -->
+    <div class="modal" id="quick-client-modal" style="z-index: 10001;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Cliente</h3>
+                <button type="button" class="modal-close" id="quick-client-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome do Cliente *</label>
+                    <input type="text" id="quick-client-name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="text" id="quick-client-phone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="quick-client-email" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-quick-client-cancel">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-quick-client-save">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Modal Title -->
+    <div class="modal" id="quick-title-modal" style="z-index: 10001;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Título Pré-definido</h3>
+                <button type="button" class="modal-close" id="quick-title-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Título *</label>
+                    <input type="text" id="quick-title-name" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-quick-title-cancel">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-quick-title-save">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/agenda.js"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários e Permissões | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <style>
+        /* Matrix design for permissions check list */
+        .permissions-matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            background-color: #242424;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .permission-checkbox-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .permission-checkbox-card:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .permission-checkbox-card input {
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .permission-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .permission-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .permission-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Controle de Usuários e Permissões</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btn-add-user">
+                        <span>+</span> Novo Usuário
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                <!-- Search Table Bar -->
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="Pesquisar usuários...">
+                            <i>🔍</i>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="custom-table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Usuário</th>
+                                    <th>Login (Username)</th>
+                                    <th>Perfil Principal</th>
+                                    <th>Permissões Ativas</th>
+                                    <th style="width: 100px; text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-list">
+                                <!-- Populated dynamically by usuarios.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal" id="user-modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Novo Usuário</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="user-form">
+                <div class="modal-body">
+                    <input type="hidden" id="user-id">
+                    
+                    <div class="form-group">
+                        <label for="user-name">Nome Completo *</label>
+                        <input type="text" id="user-name" class="form-control" placeholder="Ex: Carlos Santos" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="user-username">Usuário (Login) *</label>
+                            <input type="text" id="user-username" class="form-control" placeholder="Ex: carlos.santos" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="user-password" id="user-password-label">Senha *</label>
+                            <input type="password" id="user-password" class="form-control" placeholder="Digite a senha" autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user-role">Perfil Pré-definido *</label>
+                        <select id="user-role" class="form-control" required>
+                            <option value="Administrador">Administrador (Total)</option>
+                            <option value="Supervisor">Supervisor (Gerencial)</option>
+                            <option value="Comercial">Comercial (Agendamento & Clientes)</option>
+                            <option value="Técnico">Técnico (Consulta & Clientes)</option>
+                            <option value="Personalizado">Personalizado...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Matriz de Permissões de Acesso</label>
+                        <div class="permissions-matrix-grid" id="permissions-matrix">
+                            <!-- Permission options checklist rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-user">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/usuarios.js"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Técnicos | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Gestão de Técnicos</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btn-add-tech">
+                        <span>+</span> Novo Técnico
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                <!-- Search Table Bar -->
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="Pesquisar técnicos...">
+                            <i>🔍</i>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="custom-table" id="techs-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Especialidade</th>
+                                    <th>Turno</th>
+                                    <th>Contato</th>
+                                    <th style="width: 100px; text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="techs-list">
+                                <!-- Populated dynamically by tecnicos.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Tech Modal -->
+    <div class="modal" id="tech-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Novo Técnico</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="tech-form">
+                <div class="modal-body">
+                    <input type="hidden" id="tech-id">
+                    
+                    <div class="form-group">
+                        <label for="tech-name">Nome Completo *</label>
+                        <input type="text" id="tech-name" class="form-control" placeholder="Ex: João Mauricio" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tech-specialty">Especialidade / Cargo *</label>
+                        <input type="text" id="tech-specialty" class="form-control" placeholder="Ex: Redes e CFTV" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tech-shift">Turno de Trabalho *</label>
+                        <select id="tech-shift" class="form-control" required>
+                            <option value="Diurno">Diurno (08:00 - 18:00)</option>
+                            <option value="Noturno">Noturno (18:00 - 08:00)</option>
+                            <option value="Integral">Integral / Escala</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tech-contact">Contato (Telefone) *</label>
+                        <input type="text" id="tech-contact" class="form-control" placeholder="Ex: (11) 98888-7777" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-tech">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/tecnicos.js"></script>
+</body>
+</html>

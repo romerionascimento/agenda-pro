@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <style>
+        .filter-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px;
+            gap: 15px;
+            align-items: end;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Relatórios de Produtividade</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <span>🖨️</span> Imprimir Relatório
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="filter-start-date">Data Inicial</label>
+                        <input type="date" id="filter-start-date" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="filter-end-date">Data Final</label>
+                        <input type="date" id="filter-end-date" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="filter-status">Filtrar por Status</label>
+                        <select id="filter-status" class="form-control">
+                            <option value="all">Todos os Status</option>
+                            <option value="concluido">Concluído</option>
+                            <option value="execucao">Em execução</option>
+                            <option value="agendado">Agendado</option>
+                            <option value="pendencia-cli">Pendência Cliente</option>
+                            <option value="remarcado-cli">Remarcado Cliente</option>
+                            <option value="pendencia-com">Pendência Comercial</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="btn-apply-filters" style="width: 100%; height: 40px;">Filtrar</button>
+                </div>
+
+                <!-- Report Cards Grid -->
+                <div class="report-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Total de Agendamentos</span>
+                            <span class="stat-value" id="rep-val-total">0</span>
+                        </div>
+                        <div class="stat-icon-wrapper">📅</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Serviços Concluídos</span>
+                            <span class="stat-value" id="rep-val-concluded" style="color: var(--color-concluido);">0</span>
+                        </div>
+                        <div class="stat-icon-wrapper">✅</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Horas Alocadas</span>
+                            <span class="stat-value" id="rep-val-hours">0h</span>
+                        </div>
+                        <div class="stat-icon-wrapper">⏳</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Taxa de Conclusão</span>
+                            <span class="stat-value" id="rep-val-rate">0%</span>
+                        </div>
+                        <div class="stat-icon-wrapper">📈</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="dashboard-row">
+                    <!-- Tech Performance SVG Bar Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Produtividade por Técnico (Concluídos)</h3>
+                        </div>
+                        <div class="chart-body">
+                            <div class="svg-chart-container" id="tech-performance-chart">
+                                <!-- Generated Dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Composition SVG Pie/Doughnut Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Distribuição Percentual de Status</h3>
+                        </div>
+                        <div class="chart-body">
+                            <div class="svg-chart-container" id="status-doughnut-chart">
+                                <!-- Generated Dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Services List Table -->
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <h3 class="list-title">Detalhamento dos Atendimentos</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Título</th>
+                                    <th>Cliente</th>
+                                    <th>Técnico</th>
+                                    <th>Duração</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body">
+                                <!-- Populated dynamically by relatorios.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/relatorios.js"></script>
+</body>
+</html>

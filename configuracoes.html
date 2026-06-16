@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações | Agenda-Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <style>
+        .config-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .config-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .form-group-inline {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group-inline label {
+            width: 200px;
+        }
+        .titles-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .titles-list li {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .titles-list li:last-child {
+            border-bottom: none;
+        }
+        .btn-remove-title {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .btn-remove-title:hover {
+            color: #dc2626;
+        }
+        .add-title-box {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Configurações do Sistema</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btn-save-config">💾 Salvar Configurações</button>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                
+                <!-- Quota Config -->
+                <section class="config-section">
+                    <h2 class="config-title">Controle de Cotas de Agendamentos</h2>
+                    
+                    <div class="form-group-inline">
+                        <label for="quota-enabled">Ativar Limite de Cotas:</label>
+                        <select id="quota-enabled" class="form-control" style="width: 150px;">
+                            <option value="false">Desativado</option>
+                            <option value="true">Ativado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-inline" id="quota-settings" style="display: none;">
+                        <label for="quota-type">Período da Cota:</label>
+                        <select id="quota-type" class="form-control" style="width: 150px;">
+                            <option value="semanal">Semanal</option>
+                            <option value="mensal">Mensal</option>
+                        </select>
+                        
+                        <label for="quota-limit" style="width: auto; margin-left: 20px;">Limite Máximo:</label>
+                        <input type="number" id="quota-limit" class="form-control" min="1" value="20" style="width: 100px;">
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">Se ativado, ao exceder este limite em um dado período, não será possível realizar novos agendamentos.</p>
+                </section>
+
+                <!-- Titles Config -->
+                <section class="config-section">
+                    <h2 class="config-title">Tipos de Solicitação Pré-definidos</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Gerencie a lista de solicitações padronizadas que aparecerão no momento da criação de um agendamento.</p>
+                    
+                    <ul class="titles-list" id="titles-list">
+                        <!-- Rendered via JS -->
+                    </ul>
+
+                    <div class="add-title-box">
+                        <input type="text" id="new-title-input" class="form-control" placeholder="Novo tipo de solicitação pré-definido...">
+                        <button class="btn btn-secondary" id="btn-add-title">Adicionar Solicitação</button>
+                    </div>
+                </section>
+
+                <!-- Import Data Section -->
+                <section class="config-section" style="border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-top: 20px; background-color: rgba(255,255,255,0.02);">
+                    <h2 class="config-title">Importar Banco de Dados (CSV)</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Importe a planilha do seu sistema antigo (exportada como .csv). O sistema detectará automaticamente as colunas (Protocolo, Cliente, Solicitação, Técnico, Data, Relato, Status) e fará todo o cadastro no Firebase.</p>
+                    
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="file" id="csv-file-input" accept=".csv" class="form-control" style="max-width: 300px;">
+                        <button class="btn btn-secondary" id="btn-import-csv">🚀 Iniciar Importação</button>
+                    </div>
+                    <div id="import-status" style="margin-top: 10px; font-size: 0.85rem; font-weight: 600; display: none;"></div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/configuracoes.js"></script>
+</body>
+</html>

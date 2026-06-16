@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Gestão de Clientes</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btn-add-client">
+                        <span>+</span> Novo Cliente
+                    </button>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                <!-- Search & Filters Table Header -->
+                <div class="table-container">
+                    <div class="table-header-bar">
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="Pesquisar clientes...">
+                            <i>🔍</i>
+                        </div>
+                    </div>
+
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="custom-table" id="clients-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefone</th>
+                                    <th>E-mail</th>
+                                    <th>Endereço</th>
+                                    <th style="width: 100px; text-align: center;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-list">
+                                <!-- Populated dynamically by clientes.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Client Modal -->
+    <div class="modal" id="client-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Novo Cliente</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <form id="client-form">
+                <div class="modal-body">
+                    <input type="hidden" id="client-id">
+                    
+                    <div class="form-group">
+                        <label for="client-name">Nome Completo / Razão Social *</label>
+                        <input type="text" id="client-name" class="form-control" placeholder="Ex: Vilaboni Construtora" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-phone">Telefone *</label>
+                        <input type="text" id="client-phone" class="form-control" placeholder="Ex: (11) 99999-9999" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-email">E-mail *</label>
+                        <input type="email" id="client-email" class="form-control" placeholder="Ex: contato@empresa.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="client-address">Endereço Completo</label>
+                        <input type="text" id="client-address" class="form-control" placeholder="Ex: Rua Augusta, 100 - Cerqueira César, São Paulo - SP">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-client">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/clientes.js"></script>
+</body>
+</html>

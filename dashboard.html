@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-logo">❌</span>
+                <span>ControlX.2</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-menu-item active">
+                    <a href="dashboard.html" id="nav-dashboard">
+                        <span>📊</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="agenda.html" id="nav-agenda">
+                        <span>📅</span> Agenda
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="clientes.html" id="nav-clientes">
+                        <span>👥</span> Clientes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="tecnicos.html" id="nav-tecnicos">
+                        <span>🛠️</span> Técnicos
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="equipes.html" id="nav-equipes">
+                        <span>🤝</span> Equipes
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="relatorios.html" id="nav-relatorios">
+                        <span>📈</span> Relatórios
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="usuarios.html" id="nav-usuarios">
+                        <span>🔒</span> Usuários
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="logs.html" id="nav-logs">
+                        <span>📝</span> Logs
+                    </a>
+                </li>
+                <li class="sidebar-menu-item">
+                    <a href="configuracoes.html" id="nav-configuracoes">
+                        <span>⚙️</span> Configurações
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-details">
+                        <span class="user-name">Administrador</span>
+                        <span class="user-role">Supervisor</span>
+                    </div>
+                </div>
+                <button class="btn-logout" title="Sair do sistema">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <h2 class="header-title">Dashboard Geral</h2>
+                <div class="header-actions">
+                    <a href="agenda.html" class="btn btn-primary">
+                        <span>+</span> Ver Agenda
+                    </a>
+                </div>
+            </header>
+
+            <main class="content-body fade-in">
+                <!-- Quick Stats Grid -->
+                <div class="dashboard-grid">
+                    <div class="stat-card" id="card-clients">
+                        <div class="stat-info">
+                            <span class="stat-label">Clientes</span>
+                            <span class="stat-value" id="val-clients">0</span>
+                            <span class="stat-trend up">▲ 12% este mês</span>
+                        </div>
+                        <div class="stat-icon-wrapper">👥</div>
+                    </div>
+
+                    <div class="stat-card" id="card-techs">
+                        <div class="stat-info">
+                            <span class="stat-label">Técnicos</span>
+                            <span class="stat-value" id="val-techs">0</span>
+                            <span class="stat-trend up">▲ 3 novos</span>
+                        </div>
+                        <div class="stat-icon-wrapper">🛠️</div>
+                    </div>
+
+                    <div class="stat-card" id="card-teams">
+                        <div class="stat-info">
+                            <span class="stat-label">Equipes</span>
+                            <span class="stat-value" id="val-teams">0</span>
+                            <span class="stat-trend">Em atividade</span>
+                        </div>
+                        <div class="stat-icon-wrapper">🤝</div>
+                    </div>
+
+                    <div class="stat-card" id="card-appts">
+                        <div class="stat-info">
+                            <span class="stat-label">Agendamentos Totais</span>
+                            <span class="stat-value" id="val-appts">0</span>
+                            <span class="stat-trend up" id="trend-executing">0 ativos hoje</span>
+                        </div>
+                        <div class="stat-icon-wrapper">📅</div>
+                    </div>
+                </div>
+
+                <!-- Charts & Active Feeds Row -->
+                <div class="dashboard-row">
+                    <!-- Column 1: Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Distribuição de Status de Serviços</h3>
+                            <span class="stat-trend">Tempo Real</span>
+                        </div>
+                        <div class="chart-body">
+                            <!-- Custom Interactive SVG Bar Chart -->
+                            <div class="svg-chart-container" id="status-distribution-chart">
+                                <!-- Generated Dynamically in dashboard.js -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Workload & Recent -->
+                    <div class="list-card">
+                        <div class="list-header">
+                            <h3 class="list-title">Ocupação das Equipes</h3>
+                        </div>
+                        <div class="team-workload-list" id="workload-list">
+                            <!-- Generated Dynamically in dashboard.js -->
+                        </div>
+
+                        <div class="list-header" style="margin-top: 25px;">
+                            <h3 class="list-title">Atividades Recentes</h3>
+                        </div>
+                        <ul class="list-items" id="recent-activities">
+                            <!-- Generated Dynamically in dashboard.js -->
+                        </ul>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

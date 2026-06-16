@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Agenda-Pro</title>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/app.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            position: relative;
+        }
+
+        /* Abstract glowing background shapes for high-end feel */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.1) 0%, transparent 70%);
+            top: 10%;
+            left: 10%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.08) 0%, transparent 70%);
+            bottom: 10%;
+            right: 10%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background-color: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .login-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .error-alert {
+            display: none;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--color-execucao);
+            color: #ff8888;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .success-alert {
+            display: none;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .toggle-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .toggle-link a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-logo-container">
+            <div class="login-logo">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M16 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M8 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 14L14 16L17 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 class="login-title">ControlX - Agenda Pro</h1>
+            <p class="login-subtitle">Gestão de Equipes e Agendamentos</p>
+        </div>
+
+        <div id="errorAlert" class="error-alert"></div>
+        <div id="successAlert" class="success-alert"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" class="form-control" placeholder="Digite seu usuário" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" class="form-control" placeholder="Digite sua senha" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary login-btn">Entrar no Sistema</button>
+
+            <div class="toggle-link">
+                Primeiro acesso? <a id="show-register">Criar minha conta</a>
+            </div>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" class="hidden">
+            <div class="form-group">
+                <label for="reg-name">Nome Completo</label>
+                <input type="text" id="reg-name" class="form-control" placeholder="Seu nome completo" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-username">Usuário</label>
+                <input type="text" id="reg-username" class="form-control" placeholder="Escolha um nome de usuário" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-password">Senha</label>
+                <input type="password" id="reg-password" class="form-control" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reg-password-confirm">Confirmar Senha</label>
+                <input type="password" id="reg-password-confirm" class="form-control" placeholder="Repita a senha" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary login-btn">Enviar Cadastro</button>
+
+            <div class="toggle-link">
+                Já tem uma conta? <a id="show-login">Voltar ao Login</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="assets/js/api.js" onerror="document.getElementById('errorAlert').textContent='Falha ao carregar api.js (arquivo ausente ou erro crítico)'; document.getElementById('errorAlert').style.display='block';"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+
+        // Toggle between Login and Register
+        document.getElementById('show-register').addEventListener('click', () => {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+        });
+
+        document.getElementById('show-login').addEventListener('click', () => {
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            errorAlert.style.display = 'none';
+        });
+
+        // Global error handler
+        window.addEventListener('error', function(event) {
+            errorAlert.textContent = 'Erro de Script: ' + event.message;
+            errorAlert.style.display = 'block';
+        });
+
+        // Login handler
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            try {
+                const usernameInput = document.getElementById('username').value;
+                const passwordInput = document.getElementById('password').value;
+
+                const result = Auth.login(usernameInput, passwordInput);
+
+                if (result.success) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    errorAlert.textContent = result.message;
+                    errorAlert.style.display = 'block';
+                }
+            } catch (err) {
+                errorAlert.textContent = 'Erro inesperado: ' + err.message;
+                errorAlert.style.display = 'block';
+            }
+        });
+
+        // Register handler
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+
+            const name = document.getElementById('reg-name').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const passwordConfirm = document.getElementById('reg-password-confirm').value;
+
+            if (!name || !username || !password) {
+                errorAlert.textContent = 'Preencha todos os campos.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            if (username.length < 3) {
+                errorAlert.textContent = 'O nome de usuário deve ter pelo menos 3 caracteres.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 4) {
+                errorAlert.textContent = 'A senha deve ter pelo menos 4 caracteres.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                errorAlert.textContent = 'As senhas não coincidem. Digite novamente.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            try {
+                const result = Api.registerUser(name, username, password);
+                if (result.success) {
+                    successAlert.textContent = result.message;
+                    successAlert.style.display = 'block';
+                    registerForm.reset();
+                    // Switch back to login after 3 seconds
+                    setTimeout(() => {
+                        registerForm.classList.add('hidden');
+                        loginForm.classList.remove('hidden');
+                    }, 3000);
+                } else {
+                    errorAlert.textContent = result.message;
+                    errorAlert.style.display = 'block';
+                }
+            } catch (err) {
+                errorAlert.textContent = 'Erro inesperado: ' + err.message;
+                errorAlert.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
