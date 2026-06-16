@@ -72,8 +72,8 @@ const Auth = {
 
             let user = null;
             // Fetch users from secure local cache (which was just decrypted from the E2E network payload)
-            const users = Api._get(Api.keys.users); 
-            user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
+            const users = Api._get(Api.keys.users) || []; 
+            user = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase() && (u.password === hashedPassword || u.password === password));
 
             if (user) {
                 // Clear attempts on success
