@@ -2,7 +2,7 @@
 console.log("api.js started evaluating");
 
 const supabaseUrl = 'https://bllkimqqkdqnmaktncvj.supabase.co';
-const supabaseKey = 'sb_publishable_E-sMLyQSoVTkf9lYLRDPGg_qMH_PhW5';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsbGtpbXFxa2Rxbm1ha3RuY3ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MDg0MTcsImV4cCI6MjA5NzE4NDQxN30.T8sBnVe39HDMEzmFfvWkO8XceM-MEvPWRjAhw1Dw-aM';
 
 const Api = {
     // Keys
@@ -55,22 +55,93 @@ const Api = {
             ];
 
             for (const table of tables) {
-                const { data, error } = await this.supabase.from(table.name).select('*');
-                if (!error && data) {
-                    const mappedData = data.map(item => {
-                        if (item.created_at) {
+                // Paginate to fetch ALL rows (Supabase default limit is 1000)
+                let allData = [];
+                const pageSize = 1000;
+                let from = 0;
+                let keepFetching = true;
+                while (keepFetching) {
+                    const { data, error } = await this.supabase
+                        .from(table.name)
+                        .select('*')
+                        .range(from, from + pageSize - 1);
+                    if (error || !data || data.length === 0) {
+                        keepFetching = false;
+                    } else {
+                        allData = allData.concat(data);
+                        from += pageSize;
+                        if (data.length < pageSize) keepFetching = false;
+                    }
+                }
+                if (allData.length > 0) {
+                    const mappedData = allData.map(item => {
+                        if (item.data && typeof item.data === 'string' && item.data.startsWith('E2E::')) {
+                            try {
+                                const decoded = atob(item.data.substring(5));
+                                const decrypted = this._cipher(decoded, 'AgendaProSecretKey@2026!');
+                                // Handle UTF-8 encoded payloads (from Python or JS unescape/encodeURIComponent)
+                                let jsonStr;
+                                try {
+                                    jsonStr = decodeURIComponent(escape(decrypted));
+                                } catch(utf8Err) {
+                                    jsonStr = decrypted; // fallback if not UTF-8 encoded
+                                }
+                                const parsed = JSON.parse(jsonStr);
+                                if (item.created_at) parsed.createdAt = item.created_at;
+                                return parsed;
+                            } catch(e) {
+                                console.warn('E2EE decrypt failed for', table.name, item.id, e.message);
+                                return null; // skip corrupted records
+                            }
+                        } else if (item.created_at) {
                             item.createdAt = item.created_at;
                             delete item.created_at;
                         }
                         return item;
-                    });
-                    localStorage.setItem(table.key, JSON.stringify(mappedData));
+                    }).filter(item => item !== null); // remove failed decryptions
+                    this._set(table.key, mappedData);
+                    console.log(`Synced ${mappedData.length} records from ${table.name}`);
                 }
             }
 
-            const { data: configData, error: configError } = await this.supabase.from('config').select('*').eq('id', 1).single();
+            // Push local seed data to Supabase if tables are empty
+            let localUsers = this._get(this.keys.users);
+            if (localUsers.length === 0) {
+                // Bootstrap admin user securely when vault is empty
+                const adminUser = {
+                    id: 'usr_' + Math.random().toString(36).substring(2, 9),
+                    name: "Administrador",
+                    username: "admin",
+                    password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+                    role: "Administrador",
+                    status: "aprovado",
+                    permissions: ["ver_dashboard", "ver_agenda", "editar_agenda", "gerenciar_clientes", "gerenciar_tecnicos_equipes", "ver_relatorios", "gerenciar_usuarios", "ver_logs", "gerenciar_configuracoes", "editar_protocolo"],
+                    createdAt: new Date().toISOString()
+                };
+                localUsers = [adminUser];
+                this._set(this.keys.users, localUsers);
+            }
+
+            if (localUsers.length > 0) {
+                const { data: remoteUsers } = await this.supabase.from('users').select('id');
+                if (!remoteUsers || remoteUsers.length === 0) {
+                    for (const u of localUsers) {
+                        await this._pushToSupabase('users', u);
+                    }
+                }
+            }
+
+            const { data: configData, error: configError } = await this.supabase.from('config').select('*').single();
             if (!configError && configData) {
-                localStorage.setItem(this.keys.config, JSON.stringify(configData));
+                if (configData.data && configData.data.startsWith('E2E::')) {
+                    try {
+                        const decoded = atob(configData.data.substring(5));
+                        const decrypted = this._cipher(decoded, 'AgendaProSecretKey@2026!');
+                        this._set(this.keys.config, JSON.parse(decrypted));
+                    } catch(e) {}
+                } else {
+                    this._set(this.keys.config, configData);
+                }
             }
 
             window.dispatchEvent(new Event('api-data-updated'));
@@ -79,23 +150,78 @@ const Api = {
         }
     },
 
+    async hashPassword(password) {
+        const msgBuffer = new TextEncoder().encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    },
+
+    // Simple native synchronous stream cipher (RC4) for local storage obfuscation
+    _cipher(str, key) {
+        let s = [], j = 0, x, res = '';
+        for (let i = 0; i < 256; i++) { s[i] = i; }
+        for (let i = 0; i < 256; i++) {
+            j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
+            x = s[i]; s[i] = s[j]; s[j] = x;
+        }
+        let i = 0; j = 0;
+        for (let y = 0; y < str.length; y++) {
+            i = (i + 1) % 256;
+            j = (j + s[i]) % 256;
+            x = s[i]; s[i] = s[j]; s[j] = x;
+            res += String.fromCharCode(str.charCodeAt(y) ^ s[(s[i] + s[j]) % 256]);
+        }
+        return res;
+    },
+
     // Get helper
     _get(key) {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : (key === this.keys.config ? {} : []);
+        let data = localStorage.getItem(key);
+        if (data && data.startsWith('ENC::')) {
+            try {
+                // Decode base64 then decrypt
+                const decoded = atob(data.substring(5));
+                const decryptedBytes = this._cipher(decoded, 'AgendaProSecretKey@2026!');
+                data = decodeURIComponent(escape(decryptedBytes));
+            } catch (e) {
+                console.error("Local storage decryption failed for key", key, e);
+                return key === this.keys.config ? {} : [];
+            }
+        }
+        try {
+            return data ? JSON.parse(data) : (key === this.keys.config ? {} : []);
+        } catch(e) {
+            return key === this.keys.config ? {} : [];
+        }
     },
 
     // Set helper
     _set(key, val) {
-        const jsonStr = JSON.stringify(val);
-        localStorage.setItem(key, jsonStr);
+        try {
+            const jsonStr = JSON.stringify(val);
+            // Handle unicode safely before encrypting
+            const utf8Str = unescape(encodeURIComponent(jsonStr));
+            const encrypted = this._cipher(utf8Str, 'AgendaProSecretKey@2026!');
+            const encoded = btoa(encrypted);
+            localStorage.setItem(key, 'ENC::' + encoded);
+        } catch(e) {
+            console.error("Error setting local storage key", key, e);
+        }
     },
 
     async _pushToSupabase(table, data) {
         if (!this.supabase) return;
         try {
-            const payload = { ...data };
-            if (payload.createdAt) { payload.created_at = payload.createdAt; delete payload.createdAt; }
+            const payload = { 
+                id: data.id || 'id_' + Math.random().toString(36).substring(2, 9), 
+                created_at: data.createdAt || new Date().toISOString() 
+            };
+            const jsonStr = JSON.stringify(data);
+            const utf8Str = unescape(encodeURIComponent(jsonStr));
+            const encrypted = this._cipher(utf8Str, 'AgendaProSecretKey@2026!');
+            payload.data = 'E2E::' + btoa(encrypted);
             await this.supabase.from(table).upsert(payload);
         } catch(e) { console.error("Error pushing to Supabase", e); }
     },
@@ -357,10 +483,20 @@ const Api = {
 
     // --- Users CRUD ---
     getUsers() {
-        return this._get(this.keys.users);
+        // Return users without password field for safety
+        const users = this._get(this.keys.users);
+        return users.map(u => {
+            const safeUser = { ...u };
+            delete safeUser.password;
+            return safeUser;
+        });
     },
-    saveUser(user) {
-        const users = this.getUsers();
+    async saveUser(user) {
+        const users = this._get(this.keys.users); // Use raw get to access passwords if needed for update
+        if (user.password) {
+            user.password = await this.hashPassword(user.password);
+        }
+        
         if (user.id) {
             const index = users.findIndex(u => u.id === user.id);
             if (index !== -1) {
@@ -380,8 +516,11 @@ const Api = {
             this.addLog('Usuário', `Criou usuário: ${user.name}`);
         }
         this._set(this.keys.users, users);
-        this._pushToSupabase('users', user);
-        return user;
+        
+        // Push the merged user (which has the correct password) to Supabase
+        const userToPush = user.id ? users.find(u => u.id === user.id) : user;
+        await this._pushToSupabase('users', userToPush);
+        return userToPush;
     },
     deleteUser(id) {
         const users = this.getUsers();
@@ -394,26 +533,31 @@ const Api = {
     },
 
     // --- Self-Registration (Primeiro Acesso) ---
-    registerUser(name, username, password) {
+    async registerUser(name, username, password) {
         const users = this.getUsers();
         // Check if username already exists
         const exists = users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase());
         if (exists) {
             return { success: false, message: 'Este nome de usuário já está em uso. Escolha outro.' };
         }
+        
+        const hashedPassword = await this.hashPassword(password);
+        
         const newUser = {
             id: 'usr_' + Math.random().toString(36).substring(2, 9),
             name: name,
             username: username,
-            password: password,
+            password: hashedPassword,
             role: 'Pendente',
             status: 'pendente',
             permissions: [],
             createdAt: new Date().toISOString()
         };
-        users.push(newUser);
-        this._set(this.keys.users, users);
-        this._pushToSupabase('users', newUser);
+        
+        const rawUsers = this._get(this.keys.users);
+        rawUsers.push(newUser);
+        this._set(this.keys.users, rawUsers);
+        await this._pushToSupabase('users', newUser);
         this.addLog('Cadastro', `Novo cadastro pendente de aprovação: ${name} (${username})`);
         return { success: true, message: 'Cadastro enviado com sucesso! Aguarde a aprovação do administrador.' };
     },
@@ -448,46 +592,9 @@ const Api = {
         this._deleteFromSupabase('users', userId);
         return true;
     },
-
-    // Seed Data if storage is empty
     seedData() {
-        // Migration to add new permissions
-        const existingUsers = this.getUsers();
-        let updated = false;
-        existingUsers.forEach(u => {
-            if (u.role === 'Administrador') {
-                if (u.permissions && !u.permissions.includes('ver_logs')) { u.permissions.push('ver_logs'); updated = true; }
-                if (u.permissions && !u.permissions.includes('gerenciar_configuracoes')) { u.permissions.push('gerenciar_configuracoes'); updated = true; }
-                if (u.permissions && !u.permissions.includes('editar_protocolo')) { u.permissions.push('editar_protocolo'); updated = true; }
-            }
-            if (u.role === 'Supervisor') {
-                if (u.permissions && !u.permissions.includes('ver_logs')) { u.permissions.push('ver_logs'); updated = true; }
-                if (u.permissions && !u.permissions.includes('editar_protocolo')) { u.permissions.push('editar_protocolo'); updated = true; }
-            }
-        });
-        if (updated) {
-            this._set(this.keys.users, existingUsers);
-        }
-
-        // Seed Users first (since it is required for login)
-        if (existingUsers.length === 0) {
+        if (this.getUsers().length === 0) {
             const mockUsers = [
-                {
-                    id: 'usr_1',
-                    username: 'admin',
-                    password: 'admin123',
-                    name: 'Carlos Administrador',
-                    role: 'Administrador',
-                    permissions: ['ver_dashboard', 'ver_agenda', 'editar_agenda', 'gerenciar_clientes', 'gerenciar_tecnicos_equipes', 'ver_relatorios', 'gerenciar_usuarios', 'ver_logs', 'gerenciar_configuracoes', 'editar_protocolo']
-                },
-                {
-                    id: 'usr_2',
-                    username: 'supervisor',
-                    password: 'super123',
-                    name: 'Ana Supervisora',
-                    role: 'Supervisor',
-                    permissions: ['ver_dashboard', 'ver_agenda', 'editar_agenda', 'gerenciar_clientes', 'gerenciar_tecnicos_equipes', 'ver_relatorios', 'ver_logs', 'editar_protocolo']
-                },
                 {
                     id: 'usr_3',
                     username: 'comercial',
@@ -822,9 +929,8 @@ const Api = {
 window.Api = Api;
 
 try {
-    Api.seedData();
     Api.init();
 } catch (e) {
-    console.error("Error running Api.seedData/init:", e);
+    console.error("Error running Api.init:", e);
     setTimeout(() => alert("Erro ao carregar banco de dados local: " + e.message), 500);
 }
