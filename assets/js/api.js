@@ -564,20 +564,10 @@ const Api = {
         this._deleteFromSupabase('users', userId);
         return true;
     },
-
-        this._deleteFromSupabase('users', userId);
-        return true;
-    }
-};
-
-window.Api = Api;
-
-try {
-    Api.init();
-} catch (e) {
-    console.error("Error running Api.init:", e);
-    setTimeout(() => alert("Erro ao inicializar API: " + e.message), 500);
-}
+    seedData() {
+        if (this.getUsers().length === 0) {
+            const mockUsers = [
+                {
                     id: 'usr_3',
                     username: 'comercial',
                     password: 'com123',
