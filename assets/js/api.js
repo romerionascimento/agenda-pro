@@ -55,24 +55,52 @@ const Api = {
             ];
 
             for (const table of tables) {
-                const { data, error } = await this.supabase.from(table.name).select('*');
-                if (!error && data && data.length > 0) {
-                    const mappedData = data.map(item => {
-                        if (item.data && item.data.startsWith('E2E::')) {
+                // Paginate to fetch ALL rows (Supabase default limit is 1000)
+                let allData = [];
+                const pageSize = 1000;
+                let from = 0;
+                let keepFetching = true;
+                while (keepFetching) {
+                    const { data, error } = await this.supabase
+                        .from(table.name)
+                        .select('*')
+                        .range(from, from + pageSize - 1);
+                    if (error || !data || data.length === 0) {
+                        keepFetching = false;
+                    } else {
+                        allData = allData.concat(data);
+                        from += pageSize;
+                        if (data.length < pageSize) keepFetching = false;
+                    }
+                }
+                if (allData.length > 0) {
+                    const mappedData = allData.map(item => {
+                        if (item.data && typeof item.data === 'string' && item.data.startsWith('E2E::')) {
                             try {
                                 const decoded = atob(item.data.substring(5));
                                 const decrypted = this._cipher(decoded, 'AgendaProSecretKey@2026!');
-                                const parsed = JSON.parse(decrypted);
+                                // Handle UTF-8 encoded payloads (from Python or JS unescape/encodeURIComponent)
+                                let jsonStr;
+                                try {
+                                    jsonStr = decodeURIComponent(escape(decrypted));
+                                } catch(utf8Err) {
+                                    jsonStr = decrypted; // fallback if not UTF-8 encoded
+                                }
+                                const parsed = JSON.parse(jsonStr);
                                 if (item.created_at) parsed.createdAt = item.created_at;
                                 return parsed;
-                            } catch(e) { return item; }
+                            } catch(e) {
+                                console.warn('E2EE decrypt failed for', table.name, item.id, e.message);
+                                return null; // skip corrupted records
+                            }
                         } else if (item.created_at) {
                             item.createdAt = item.created_at;
                             delete item.created_at;
                         }
                         return item;
-                    });
+                    }).filter(item => item !== null); // remove failed decryptions
                     this._set(table.key, mappedData);
+                    console.log(`Synced ${mappedData.length} records from ${table.name}`);
                 }
             }
 
